@@ -1,8 +1,7 @@
 import random
 
 CHAR_TO_NUM_MAPPING = {'A':0,'B':1,'C':2,'D':3,'E':4,'F':5,'G':6,'H':7,'I':8}
-X_INDEXES = list(range(9))
-Y_INDEXES = list(range(9))
+GRID_SIZE = 9
 FLAG_CELL = 'F'
 MINE_CELL = 'M'
 EMPTY_CELL = ' '
@@ -10,8 +9,7 @@ PLAIN_CELL = '-'
 
 class GameBoard:
     def __init__(self):
-        self._board = self._board = [[EMPTY_CELL for _ in range(9)] for _ in range(9)]
-
+        self._board = [[EMPTY_CELL for _ in range(GRID_SIZE)] for _ in range(GRID_SIZE)]
         self._counter = 0
 
     @property
@@ -23,31 +21,28 @@ class GameBoard:
         return self._counter
 
     def flag(self, cell):
-        cord1, cord2 = get_cords_from_cell(cell)
-
-        self._board[cord1][cord2] = FLAG_CELL
+        row, col = get_cords_from_cell(cell)
+        self._board[row][col] = FLAG_CELL
 
     def unflag(self, cell):
-        cord1, cord2 = get_cords_from_cell(cell)
-
-        if self._board[cord1][cord2] == FLAG_CELL:
-            self._board[cord1][cord2] = EMPTY_CELL
+        row, col = get_cords_from_cell(cell)
+        if self._board[row][col] == FLAG_CELL:
+            self._board[row][col] = EMPTY_CELL
     
-    def setMine(self, cord1, cord2):
-        self._board[cord1][cord2] = MINE_CELL
+    def setMine(self, row, col):
+        self._board[row][col] = MINE_CELL
 
-    def setNumber(self, cord1, cord2, num):
-        self._board[cord1][cord2] = num
+    def setNumber(self, row, col, num):
+        self._board[row][col] = num
 
     def start(self, cell, numboard): 
-        cord1, cord2 = get_cords_from_cell(cell)
+        row, col = get_cords_from_cell(cell)
+        self.set_island(row, col, numboard)
 
-        self.set_island(cord1, cord2, numboard)
+    def set_island(self, row, col, numboard):
+        self._board[row][col] = PLAIN_CELL
 
-    def set_island(self, cord1, cord2, numboard):
-        self._board[cord1][cord2] = PLAIN_CELL
-
-        neighboursList = find_neighbours((cord1, cord2))
+        neighboursList = find_neighbours((row, col))
         for n in neighboursList:
             if numboard[n[0]][n[1]] == EMPTY_CELL:
                 self._board[n[0]][n[1]] = PLAIN_CELL
@@ -58,97 +53,93 @@ class GameBoard:
                         neighboursList.append(new_n)
             else:
                 if self._board[n[0]][n[1]] == EMPTY_CELL:
-                    self._board[n[0]][n[1] ] = numboard[n[0]][n[1]]
+                    self._board[n[0]][n[1]] = numboard[n[0]][n[1]]
                     self._counter += 1
 
-    # click ends the game if a mine is clicked. Otherwise sets the tile as the number clicked,
-    # or if a blank tile is clicked, reveals the island of blank tiles.
     def click(self, cell, mineBoard, numBoard):
-        cord1, cord2 = get_cords_from_cell(cell)
+        row, col = get_cords_from_cell(cell)
 
-        if mineBoard[cord1][cord2] == MINE_CELL:
-            self._board[cord1][cord2] = MINE_CELL
-
+        if mineBoard[row][col] == MINE_CELL:
+            self._board[row][col] = MINE_CELL
             return False
 
-        if self._board[cord1][cord2] != EMPTY_CELL:
-            # TODO why have u clicked here. show error
-
+        if self._board[row][col] != EMPTY_CELL:
             return True
         
-        if numBoard.board[cord1][cord2] != EMPTY_CELL:
-            self._board[cord1][cord2] = numBoard.board[cord1][cord2]
+        if numBoard.board[row][col] != EMPTY_CELL:
+            self._board[row][col] = numBoard.board[row][col]
             self._counter += 1
-
             return True
         
-        self.set_island(cord1, cord2, numBoard.board)
-
+        self.set_island(row, col, numBoard.board)
         return True
 
 def display_board(board):
     print("   " + " ".join("ABCDEFGHI"))
     print("  +" + "-" * 17 + "+")
+
     for i, row in enumerate(board):
         print(f"{i} |" + " ".join(row) + "|")
+        
     print("  +" + "-" * 17 + "+")
 
 def get_cords_from_cell(cell):
     col = CHAR_TO_NUM_MAPPING[cell[0].upper()]
     row = int(cell[1])
-
     return row, col
 
-# set_mine_board initates the mine board. Ensures that the first cell clicked and its neighbours are not mines.
 def set_mine_board(cell):
-    cord1, cord2 = get_cords_from_cell(cell)
-
+    row, col = get_cords_from_cell(cell)
     mine_board = GameBoard()
 
-    combinations = find_neighbours((cord1, cord2))
-    combinations.append((cord1, cord2))
+    combinations = find_neighbours((row, col))
+    combinations.append((row, col))
 
     for _ in range(10):
         while True:
-            c1 = random.choice(X_INDEXES)
-            c2 = random.choice(Y_INDEXES)
-            if (c1,c2) not in combinations:
-                combinations.append((c1,c2))
+            r = random.randint(0, 8)
+            c = random.randint(0, 8)
+            if (r, c) not in combinations:
+                combinations.append((r, c))
                 break
 
-        mine_board.setMine(c1, c2)
+        mine_board.setMine(r, c)
     
     return mine_board.board
  
 def set_num_board(mine_board):
     num_board = GameBoard()
 
-    for x in X_INDEXES:
-        for y in Y_INDEXES:
+    for x in range(GRID_SIZE):
+        for y in range(GRID_SIZE):
             if mine_board[x][y] == MINE_CELL:
                 continue
 
             num_nearby_mines = 0
-
-            neighbours = find_neighbours((x,y))
+            neighbours = find_neighbours((x, y))
             for n in neighbours:
                 if mine_board[n[0]][n[1]] == MINE_CELL:
-                    num_nearby_mines+=1
+                    num_nearby_mines += 1
 
             if num_nearby_mines > 0:
                 num_board.setNumber(x, y, str(num_nearby_mines))
 
     return num_board
 
-# finds the valid neighbours of a tile (excluding tiles out of bounds)
-def find_neighbours(t):
-    x, y = t
-    neighbours = [
-        (i, j)
-        for i in range(x - 1, x + 2)
-        for j in range(y - 1, y + 2)
-        if (i, j) != (x, y) and 0 <= i < 9 and 0 <= j < 9
-    ]
+def find_neighbours(pos):
+    """Return all valid neighbouring (row, col) positions around a given cell."""
+    row, col = pos
+    neighbours = []
+
+    for dr in (-1, 0, 1):
+        for dc in (-1, 0, 1):
+            if dr == 0 and dc == 0:
+                continue  # skip the cell itself
+
+            new_row, new_col = row + dr, col + dc
+            if 0 <= new_row < GRID_SIZE and 0 <= new_col < GRID_SIZE:
+                neighbours.append((new_row, new_col))
+
     return neighbours
 
 def coordinateCheck(cord):
@@ -174,7 +165,6 @@ def inputChecker(input):
 
 def begin_game(game_board):
     display_board(game_board.board)
-
     start_cord = input("----> Please enter your first coordinate: ")
     while coordinateCheck(start_cord) != True:
         start_cord = input("----> Please enter your first coordinate: ")
@@ -185,7 +175,6 @@ def begin_game(game_board):
     game_board.start(start_cord, num_board.board)
 
     display_board(game_board.board)
-
     return mine_board, num_board
 
 def turn(game_board, mine_board, num_board):
@@ -230,7 +219,6 @@ if __name__ == "__main__":
     game_board = GameBoard()
     
     mines_board, num_board = begin_game(game_board)
-
     display_board(game_board.board)
     print(game_board.counter)
     
@@ -240,13 +228,8 @@ if __name__ == "__main__":
 
         if result == False:
             print('Game Over')
-
             break
 
         if game_board.counter == 71:
             print('you win!!')
-
             break
-        
-        
-        
