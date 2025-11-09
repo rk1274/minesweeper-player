@@ -28,12 +28,12 @@ class GameBoard:
         return self._counter
 
     def flag(self, cell):
-        cord2 = d[cell[0]]
+        cord2 = CHAR_TO_NUM_MAPPING[cell[0]]
         cord1 = int(cell[1]) + 3
         self._board[cord1][cord2] = 'F'
 
     def unflag(self, cell):
-        cord2 = d[cell[0]]
+        cord2 = CHAR_TO_NUM_MAPPING[cell[0]]
         cord1 = int(cell[1]) + 3
         self._board[cord1][cord2] = ' '
     
@@ -44,69 +44,53 @@ class GameBoard:
         self._board[cord1][cord2] = num
 
     def start(self, cell, numboard): 
-        cord2 = d[cell[0]] - 1
-        cord1 = int(cell[1])
-        self._board[cord1 + 3][cord2 + 1] = '-'
+        cord1 = int(cell[1]) + Y_OFFSET
+        cord2 = CHAR_TO_NUM_MAPPING[cell[0]]
 
+        self.set_island(cord1, cord2, numboard)
 
-        neighboursList = neighbours(cord1, cord2)
-        for i in neighboursList:
-            if numboard[i[0] + 3][i[1] + 1] == ' ':
-                self._board[i[0] + 3][i[1] + 1] = '-'
+    def set_island(self, cord1, cord2, numboard):
+        self._board[cord1][cord2] = '-'
+
+        neighboursList = find_neighbours((cord1, cord2))
+        for n in neighboursList:
+            if numboard[n[0]][n[1]] == ' ':
+                self._board[n[0]][n[1]] = '-'
                 self._counter += 1
-                for j in neighbours(i[0], i[1]):
-                    if j not in neighboursList:
-                        neighboursList.append(j)
+
+                for new_n in find_neighbours((n[0], n[1])):
+                    if new_n not in neighboursList:
+                        neighboursList.append(new_n)
             else:
-                if self._board[i[0] + 3][i[1] + 1] == ' ':
-                    self._board[i[0] + 3][i[1] + 1] = numboard[i[0] + 3][i[1] + 1]
+                if self._board[n[0]][n[1]] == ' ':
+                    self._board[n[0]][n[1] ] = numboard[n[0]][n[1]]
                     self._counter += 1
 
-
+    # click ends the game if a mine is clicked. Otherwise sets the tile as the number clicked,
+    # or if a blank tile is clicked, reveals the island of blank tiles.
     def click(self, cell, mineBoard, numBoard):
-        cord1 = int(cell[1]) + 3
-        cord2 = d[cell[0]]
+        cord1 = int(cell[1]) + Y_OFFSET
+        cord2 = CHAR_TO_NUM_MAPPING[cell[0]]
+
         if mineBoard[cord1][cord2] == 'M':
             self._board[cord1][cord2] = mineBoard[cord1][cord2]
+
             return False
-        elif self._board[cord1][cord2] != ' ':
-            return 
-        elif numBoard.board[cord1][cord2] != ' ':
+
+        if self._board[cord1][cord2] != ' ':
+            # TODO why have u clicked here. show error
+
+            return True
+        
+        if numBoard.board[cord1][cord2] != ' ':
             self._board[cord1][cord2] = numBoard.board[cord1][cord2]
             self._counter += 1
-            return True
-        else:
-            cord2 = d[cell[0]] - 1
-            cord1 = int(cell[1])
-            self._board[cord1 + 3][cord2 + 1] = '-'
-
-
-            neighboursList = neighbours(cord1, cord2)
-            for i in neighboursList:
-                if numBoard.board[i[0] + 3][i[1] + 1] == ' ':
-                    self._board[i[0] + 3][i[1] + 1] = '-'
-                    self._counter += 1
-                    for j in neighbours(i[0], i[1]):
-                        if j not in neighboursList:
-                            neighboursList.append(j)
-                else:
-                    if self._board[i[0] + 3][i[1] + 1] == ' ':
-                        self._board[i[0] + 3][i[1] + 1] = numBoard.board[i[0] + 3][i[1] + 1]
-                        self._counter += 1
-                
 
             return True
+        
+        self.set_island(cord1, cord2, numBoard)
 
-
-X = 9
-Y = 9
-neighbours = lambda x, y : [(x2, y2) for x2 in range(x-1, x+2)
-                               for y2 in range(y-1, y+2)
-                               if (-1 < x <= X and
-                                   -1 < y <= Y and
-                                   (x != x2 or y != y2) and
-                                   (0 <= x2 <= X) and
-                                   (0 <= y2 <= Y))]
+        return True
 
 def displayBoard(board):
     for i in board:
@@ -115,67 +99,66 @@ def displayBoard(board):
             else:
                 print(''.join(i))
 
-d = {'A':1,'B':2,'C':3,'D':4,'E':5,'F':6,'G':7,'H':8,'I':9}
+CHAR_TO_NUM_MAPPING = {'A':1,'B':2,'C':3,'D':4,'E':5,'F':6,'G':7,'H':8,'I':9}
 
-#initates the mine board
-def mineBoard(cell):
-    cord1 = int(cell[1]) + 3
-    cord2 = d[cell[0]]
+# set_mine_board initates the mine board. Ensures that the first cell clicked and its neighbours are not mines.
+def set_mine_board(cell):
+    cord1 = int(cell[1]) + Y_OFFSET
+    cord2 = CHAR_TO_NUM_MAPPING[cell[0]]
 
-    mines = GameBoard()
-    c1List = [3,4,5,6,7,8,9,10,11]
-    c2List = [1,2,3,4,5,6,7,8,9]
+    mine_board = GameBoard()
 
-    combinations = [[cord1,cord2]]
+    combinations = find_neighbours((cord1, cord2))
+    combinations.append((cord1, cord2))
 
-    for i in neighbours(cord1 -3, cord2-1):
-        combinations.append([i[0]+3, i[1]+1])
-
-    for i in range(10):
+    for _ in range(10):
         while True:
-            c1 = random.choice(c1List)
-            c2 = random.choice(c2List)
-            if [c1,c2] not in combinations:
-                combinations.append([c1,c2])
+            c1 = random.choice(X_INDEXES)
+            c2 = random.choice(Y_INDEXES)
+            if (c1,c2) not in combinations:
+                combinations.append((c1,c2))
                 break
-        mines.setMine(c1, c2)
+
+        mine_board.setMine(c1, c2)
     
-    #displayBoard(mines.board)
-    return mines.board
+    return mine_board.board
 
-def numbers(board,mineBoard):
+X_INDEXES = [3,4,5,6,7,8,9,10,11]
+Y_INDEXES = [1,2,3,4,5,6,7,8,9]
+Y_OFFSET = 3
 
-    numBoard = GameBoard()
-    c1List = [3,4,5,6,7,8,9,10,11]
-    c2List = [1,2,3,4,5,6,7,8,9]
-    number = 0
-    for i in c1List:
-        for j in c2List:
-            if mineBoard[i][j] != 'M':
-                
-                if mineBoard[i-1][j-1] == 'M':
-                    number+=1
-                if mineBoard[i-1][j] == 'M':
-                    number+=1
-                if mineBoard[i-1][j+1] == 'M':
-                    number+=1
-                if mineBoard[i][j-1] == 'M':
-                    number+=1
-                if mineBoard[i][j+1] == 'M':
-                    number+=1
-                if mineBoard[i+1][j-1] == 'M':
-                    number+=1
-                if mineBoard[i+1][j] == 'M':
-                    number+=1
-                if mineBoard[i+1][j+1] == 'M':
-                    number+=1
+def numbers(mine_board):
+    num_board = GameBoard()
 
-                if number > 0:
-                   numBoard.setNumber(i,j,str(number))
-                number=0
+    for x in X_INDEXES:
+        for y in Y_INDEXES:
+            if mine_board[x][y] == 'M':
+                continue
 
-    ##displayBoard(numBoard.board)
-    return numBoard
+            num_mines = 0
+            neighbours = find_neighbours((x,y))
+            for n in neighbours:
+                if mine_board[n[0]][n[1]] == 'M':
+                    num_mines+=1
+
+            if num_mines > 0:
+                num_board.setNumber(x, y, str(num_mines))
+
+    return num_board
+
+# finds the valid neighbours of a tile (excluding tiles out of bounds)
+def find_neighbours(t):
+    x, y = t
+    potential = [(i, j) for i in range(x - 1, x + 2) for j in range(y - 1, y + 2)]
+    potential.remove((x, y))
+
+    neighbours = [
+        (i, j)
+        for i, j in potential
+        if i in X_INDEXES and j in Y_INDEXES
+    ]
+
+    return neighbours
 
 def coordinateCheck(cord):
     try:
@@ -206,8 +189,8 @@ def beginGame(gameBoard):
         startCord = input("----> Please enter your first coordinate: ")
         coordinateCheck(startCord)
 
-    minesBoard = mineBoard(startCord)
-    numboard = numbers(gameBoard,minesBoard)
+    minesBoard = set_mine_board(startCord)
+    numboard = numbers(minesBoard)
     gameBoard.start(startCord,numboard.board)
 
     displayBoard(gameBoard.board)
@@ -230,42 +213,44 @@ def turn(gameBoard, minesBoard, numboard):
         result = gameBoard.click(userInput[2:4], minesBoard, numboard)
 
     return result
-print('''
-+========================+
-| WELCOME TO MINESWEEPER |
-+========================+
-| the aim of this game   |
-| is to flag all the     |
-| mines and clear all    |
-| safe tiles!!           |
-+========================+
-| to flag a cell:        |
-|   F[A0]                |
-| to unflag a cell:      |
-|   U[A0]                |
-| to click a cell:       | 
-|   C[A0]                |
-+========================+
-
-+========================+
-|      GOOD LUCK !       |
-+========================+
-   ''')
-gameBoard = GameBoard()
-
-minesBoard, numBoard = beginGame(gameBoard)
-## displayBoard(minesBoard)
-displayBoard(gameBoard.board)
-print(gameBoard.counter)
-
-while True:
-    result = turn(gameBoard, minesBoard, numBoard)
+if __name__ == "__main__":
+    print('''
+    +========================+
+    | WELCOME TO MINESWEEPER |
+    +========================+
+    | the aim of this game   |
+    | is to flag all the     |
+    | mines and clear all    |
+    | safe tiles!!           |
+    +========================+
+    | to flag a cell:        |
+    |   F[A0]                |
+    | to unflag a cell:      |
+    |   U[A0]                |
+    | to click a cell:       | 
+    |   C[A0]                |
+    +========================+
+    
+    +========================+
+    |      GOOD LUCK !       |
+    +========================+
+       ''')
+    gameBoard = GameBoard()
+    
+    minesBoard, numBoard = beginGame(gameBoard)
+    ## displayBoard(minesBoard)
     displayBoard(gameBoard.board)
-    if result == False:
-        print('Game Over')
-        break
-    elif gameBoard.counter == 71:
-        print('you win!!')
-        break
-
-
+    print(gameBoard.counter)
+    
+    while True:
+        result = turn(gameBoard, minesBoard, numBoard)
+        displayBoard(gameBoard.board)
+        if result == False:
+            print('Game Over')
+            break
+        elif gameBoard.counter == 71:
+            print('you win!!')
+            break
+        
+        
+        
