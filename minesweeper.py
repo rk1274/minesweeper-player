@@ -1,9 +1,8 @@
 import random
 
-CHAR_TO_NUM_MAPPING = {'A':1,'B':2,'C':3,'D':4,'E':5,'F':6,'G':7,'H':8,'I':9}
-X_INDEXES = [3,4,5,6,7,8,9,10,11]
-Y_INDEXES = [1,2,3,4,5,6,7,8,9]
-OFFSET = 3
+CHAR_TO_NUM_MAPPING = {'A':0,'B':1,'C':2,'D':3,'E':4,'F':5,'G':6,'H':7,'I':8}
+X_INDEXES = list(range(9))
+Y_INDEXES = list(range(9))
 FLAG_CELL = 'F'
 MINE_CELL = 'M'
 EMPTY_CELL = ' '
@@ -11,20 +10,7 @@ PLAIN_CELL = '-'
 
 class GameBoard:
     def __init__(self):
-        self._board = [(" +---------+"),
-        (" |ABCDEFGHI|"),
-        (" +---------+"),
-        [("0|"),(" "),(" "),(" "),(" "),(" "),(" "),(" "),(" "),(" "),("|")],
-        [("1|"),(" "),(" "),(" "),(" "),(" "),(" "),(" "),(" "),(" "),("|")],
-        [("2|"),(" "),(" "),(" "),(" "),(" "),(" "),(" "),(" "),(" "),("|")],
-        [("3|"),(" "),(" "),(" "),(" "),(" "),(" "),(" "),(" "),(" "),("|")],
-        [("4|"),(" "),(" "),(" "),(" "),(" "),(" "),(" "),(" "),(" "),("|")],
-        [("5|"),(" "),(" "),(" "),(" "),(" "),(" "),(" "),(" "),(" "),("|")],
-        [("6|"),(" "),(" "),(" "),(" "),(" "),(" "),(" "),(" "),(" "),("|")],
-        [("7|"),(" "),(" "),(" "),(" "),(" "),(" "),(" "),(" "),(" "),("|")],
-        [("8|"),(" "),(" "),(" "),(" "),(" "),(" "),(" "),(" "),(" "),("|")],
-        (" +---------+")
-        ]
+        self._board = self._board = [[EMPTY_CELL for _ in range(9)] for _ in range(9)]
 
         self._counter = 0
 
@@ -44,7 +30,8 @@ class GameBoard:
     def unflag(self, cell):
         cord1, cord2 = get_cords_from_cell(cell)
 
-        self._board[cord1][cord2] = EMPTY_CELL
+        if self._board[cord1][cord2] == FLAG_CELL:
+            self._board[cord1][cord2] = EMPTY_CELL
     
     def setMine(self, cord1, cord2):
         self._board[cord1][cord2] = MINE_CELL
@@ -80,7 +67,7 @@ class GameBoard:
         cord1, cord2 = get_cords_from_cell(cell)
 
         if mineBoard[cord1][cord2] == MINE_CELL:
-            self._board[cord1][cord2] = mineBoard[cord1][cord2]
+            self._board[cord1][cord2] = MINE_CELL
 
             return False
 
@@ -100,16 +87,17 @@ class GameBoard:
         return True
 
 def display_board(board):
-    for i in board:
-            if isinstance(i, str):
-                print(i)
-            else:
-                print(''.join(i))
+    print("   " + " ".join("ABCDEFGHI"))
+    print("  +" + "-" * 17 + "+")
+    for i, row in enumerate(board):
+        print(f"{i} |" + " ".join(row) + "|")
+    print("  +" + "-" * 17 + "+")
 
 def get_cords_from_cell(cell):
-    cord1 = int(cell[1]) + OFFSET
-    cord2 = CHAR_TO_NUM_MAPPING[cell[0]]
-    return cord1, cord2
+    col = CHAR_TO_NUM_MAPPING[cell[0].upper()]
+    row = int(cell[1])
+
+    return row, col
 
 # set_mine_board initates the mine board. Ensures that the first cell clicked and its neighbours are not mines.
 def set_mine_board(cell):
@@ -155,31 +143,28 @@ def set_num_board(mine_board):
 # finds the valid neighbours of a tile (excluding tiles out of bounds)
 def find_neighbours(t):
     x, y = t
-    potential = [(i, j) for i in range(x - 1, x + 2) for j in range(y - 1, y + 2)]
-    potential.remove((x, y))
-
     neighbours = [
         (i, j)
-        for i, j in potential
-        if i in X_INDEXES and j in Y_INDEXES
+        for i in range(x - 1, x + 2)
+        for j in range(y - 1, y + 2)
+        if (i, j) != (x, y) and 0 <= i < 9 and 0 <= j < 9
     ]
-
     return neighbours
 
 def coordinateCheck(cord):
     try:
-        if cord[0] in ['A','B','C','D','E','F','G','H','I'] and int(cord[1]) in range(0, 9) and len(cord) == 2:
+        if cord[0].upper() in CHAR_TO_NUM_MAPPING and int(cord[1]) in range(0, 9) and len(cord) == 2:
             return True
         else:
-              print("[error] please enter in the format 'A2'")
-              return False
+            print("[error] please enter in the format 'A2'")
+            return False
     except:
         print("[error] please enter in the format 'A2'")
         return False
 
 def inputChecker(input):
     try:
-        if input[0] in ['F','U','C'] and input[2] in ['A','B','C','D','E','F','G','H','I'] and int(input[3]) in range(0, 9) and len(input) == 5:
+        if input[0] in ['F','U','C'] and input[2].upper() in CHAR_TO_NUM_MAPPING and int(input[3]) in range(0, 9) and len(input) == 5:
             return True
         else:
             print("[error] please enter in the format 'F[A2]'")
