@@ -1,5 +1,5 @@
 import unittest
-from minesweeper import GameBoard, coordinateCheck, inputChecker, numbers, set_mine_board, CHAR_TO_NUM_MAPPING
+from minesweeper import GameBoard, coordinateCheck, inputChecker, set_num_board, set_mine_board, CHAR_TO_NUM_MAPPING
 
 class TestMinesweeper(unittest.TestCase):
     def setUp(self):
@@ -43,7 +43,7 @@ class TestMinesweeper(unittest.TestCase):
     def test_numbers_no_mines(self):
         board = self.game.board
         mines = GameBoard().board
-        numboard = numbers(self.game, mines)
+        numboard = set_num_board(self.game, mines)
         # No mines means all empty (no numbers)
         found_numbers = any(
             isinstance(row, list) and any(cell.isdigit() for cell in row)
