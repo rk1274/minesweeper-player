@@ -15,10 +15,16 @@ Install PyQt5 using pip:
 pip install PyQt5
 ```
 
-Then simply run:
+Then run:
 ```bash
 python minesweeper_gui.py
 ```
+
+To start the game, left-click on any tile.
+
+Then you can right-click to place a flag or left-click to reveal a cell.
+
+*The aim is to avoid the mines to dont left-click any of those!!*
 
 ## Running the Core (Text-based) Version
 
