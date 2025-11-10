@@ -10,7 +10,7 @@ You can simply run the minesweeper.exe if using windows.
 
 Alternatively you'll need to have **Python 3.7+** and **PyQt5** installed.
 
-Install PyQt% using pip:
+Install PyQt5 using pip:
 ```bash
 pip install PyQt5
 ```
