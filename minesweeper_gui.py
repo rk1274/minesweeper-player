@@ -1,4 +1,4 @@
-from minesweeper import (
+from minesweeper_core import (
     GameBoard, NUM_SAFE_TILES, GRID_SIZE,
     EMPTY_CELL, FLAG_CELL, MINE_CELL,
     set_mine_board, set_num_board
@@ -37,13 +37,13 @@ class CellButton(QPushButton):
             }
                            
             QPushButton#revealed1 {
-                background-color: #e9bfac;
+                background-color: #eecfc0;
                 border: none;
                 font-weight: bold;
             }
                            
             QPushButton#revealed2 {
-                background-color: #eecfc0;
+                background-color: #e9bfac;
                 border: none;
                 font-weight: bold;
             }
