@@ -1,5 +1,5 @@
 import unittest
-from minesweeper import GameBoard, coordinateCheck, inputChecker, set_num_board, set_mine_board, CHAR_TO_NUM_MAPPING
+from minesweeper import GameBoard, coordinate_check, input_check, set_num_board, set_mine_board, CHAR_TO_NUM_MAPPING
 
 class TestMinesweeper(unittest.TestCase):
     def setUp(self):
@@ -12,33 +12,33 @@ class TestMinesweeper(unittest.TestCase):
         self.assertEqual(self.game.board[3][1], " ")
 
     def test_set_mine(self):
-        self.game.setMine(3, 1)
+        self.game.set_mine(3, 1)
         self.assertEqual(self.game.board[3][1], "M")
 
     def test_set_number(self):
-        self.game.setNumber(3, 1, "2")
+        self.game.set_number(3, 1, "2")
         self.assertEqual(self.game.board[3][1], "2")
 
     def test_coordinate_check_valid(self):
-        self.assertTrue(coordinateCheck("A0"))
-        self.assertTrue(coordinateCheck("I8"))
+        self.assertTrue(coordinate_check("A0"))
+        self.assertTrue(coordinate_check("I8"))
 
     def test_coordinate_check_invalid(self):
-        self.assertFalse(coordinateCheck("J0"))
-        self.assertFalse(coordinateCheck("A9"))
-        self.assertFalse(coordinateCheck("AA"))
-        self.assertFalse(coordinateCheck(""))
+        self.assertFalse(coordinate_check("J0"))
+        self.assertFalse(coordinate_check("A9"))
+        self.assertFalse(coordinate_check("AA"))
+        self.assertFalse(coordinate_check(""))
 
     def test_input_checker_valid(self):
-        self.assertTrue(inputChecker("F[A0]"))
-        self.assertTrue(inputChecker("U[I8]"))
-        self.assertTrue(inputChecker("C[B3]"))
+        self.assertTrue(input_check("F[A0]"))
+        self.assertTrue(input_check("U[I8]"))
+        self.assertTrue(input_check("C[B3]"))
 
     def test_input_checker_invalid(self):
-        self.assertFalse(inputChecker("Z[A0]"))
-        self.assertFalse(inputChecker("F[J0]"))
-        self.assertFalse(inputChecker("C[A9]"))
-        self.assertFalse(inputChecker("F[A00]"))
+        self.assertFalse(input_check("Z[A0]"))
+        self.assertFalse(input_check("F[J0]"))
+        self.assertFalse(input_check("C[A9]"))
+        self.assertFalse(input_check("F[A00]"))
 
     def test_numbers_no_mines(self):
         board = self.game.board
@@ -60,14 +60,14 @@ class TestMinesweeper(unittest.TestCase):
 
     def test_click_on_mine_returns_false(self):
         mines = GameBoard()
-        mines.setMine(3, 1)
+        mines.set_mine(3, 1)
         numBoard = GameBoard()
         result = self.game.click("A0", mines.board, numBoard)
         self.assertFalse(result)
 
     def test_click_on_safe_returns_true(self):
         numBoard = GameBoard()
-        numBoard.setNumber(3, 1, "1")
+        numBoard.set_number(3, 1, "1")
         mines = GameBoard()
         result = self.game.click("A0", mines.board, numBoard)
         self.assertTrue(result)
